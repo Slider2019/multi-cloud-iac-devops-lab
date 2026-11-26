@@ -207,7 +207,7 @@ terraform plan -out=azure.tfplan
 terraform apply azure.tfplan
 ```
 
-> ⚠️ **Reemplaza `allowed_ip`** con tu IP pública real (por ejemplo, `203.0.113.10/32`) antes de aplicar.  
+> ⚠️ **Reemplazar `allowed_ip`** con nuestra IP pública real (por ejemplo, `203.0.113.10/32`) antes de aplicar.  
 > El valor por defecto `0.0.0.0/32` es un marcador de posición intencional — no coincide con ninguna dirección real.
 
 ### Desplegar AWS — Terraform
@@ -357,7 +357,7 @@ sonar-scanner \
 - **Mínimo privilegio**: el SP de Azure y el usuario IAM de AWS tienen únicamente los permisos que requieren los recursos de este proyecto.
 - **Sin secretos hardcodeados**: todos los valores sensibles se pasan mediante variables de entorno `TF_VAR_*` o GitHub Secrets.
 - **Variables sensibles**: `vm_admin_username`, `vm_admin_password` (Azure) y `key_name` (AWS) están marcadas como `sensitive = true` en Terraform — se ocultan en la salida de CLI y en los archivos de plan.
-- **Marcador de IP permitida**: el valor por defecto `0.0.0.0/32` para SSH/RDP no es una dirección CIDR válida — no coincide con ningún host. Reemplázalo con tu IP real antes de aplicar.
+- **Marcador de IP permitida**: el valor por defecto `0.0.0.0/32` para SSH/RDP no es una dirección CIDR válida — no coincide con ningún host. Reemplazar con nuestra IP real antes de aplicar.
 - **IMDSv2 obligatorio**: el servicio de metadatos de la instancia EC2 requiere acceso basado en token (`http_tokens = "required"`).
 - **Cifrado EBS**: el volumen raíz del EC2 está cifrado en reposo.
 - **Parámetros seguros en Bicep**: `adminUsername` y `adminPassword` usan el decorador `@secure()` — no se registran ni se almacenan en el historial de despliegues.
@@ -387,7 +387,7 @@ sonar-scanner \
 | Transferencia de datos | — | variable |
 | **Total** | | **~$9/mes** |
 
-> Detén o desasigna las VMs cuando no estén en uso para reducir los costos de cómputo.
+> Detener o desasignar las VMs cuando no estén en uso para reducir los costos de cómputo.
 
 ---
 
