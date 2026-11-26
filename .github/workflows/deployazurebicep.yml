@@ -1,0 +1,87 @@
+name: Deploy — Azure Bicep
+
+on:
+  workflow_dispatch:
+    inputs:
+      location:
+        description: "Región de Azure donde desplegar"
+        required: true
+        type: choice
+        default: "eastus"
+        options:
+          - eastus
+          - eastus2
+          - westeurope
+          - westus2
+      confirm:
+        description: "Escribe DEPLOY para confirmar el despliegue"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    name: Verificar confirmación
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comprobar confirmación
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "DEPLOY" ]; then
+            echo "La cadena de confirmación no coincide. Abortando."
+            exit 1
+          fi
+
+  deploy:
+    name: Bicep Deployment — Azure
+    runs-on: ubuntu-latest
+    needs: guard
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Iniciar sesión en Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Instalar Bicep CLI
+        run: az bicep install
+
+      - name: Compilar Bicep (validación previa)
+        run: az bicep build --file bicep/main.bicep
+
+      - name: Crear archivo de parámetros desde secretos
+        run: |
+          cat > bicep/deploy.bicepparam <<EOF
+          using './main.bicep'
+
+          param location = '${{ github.event.inputs.location }}'
+          param resourceGroupName = 'resourcegroupclaudecode'
+          param environment = 'Dev'
+          param project = 'ClaudeCodeLab'
+          param owner = 'DiegoRojas'
+          param allowedIp = '${{ secrets.ALLOWED_IP }}'
+          param adminUsername = '${{ secrets.AZURE_VM_ADMIN_USERNAME }}'
+          param adminPassword = '${{ secrets.AZURE_VM_ADMIN_PASSWORD }}'
+          param storageAccountName = 'saclaudecode1987'
+          EOF
+
+      - name: Terraform — Despliegue a nivel de suscripción
+        run: |
+          az deployment sub create \
+            --name "deploy-claudecodelab-${{ github.run_id }}" \
+            --location "${{ github.event.inputs.location }}" \
+            --template-file bicep/main.bicep \
+            --parameters bicep/deploy.bicepparam
+
+      - name: Mostrar outputs del despliegue
+        run: |
+          az deployment sub show \
+            --name "deploy-claudecodelab-${{ github.run_id }}" \
+            --query properties.outputs
+
+      - name: Limpiar archivo de parámetros temporal
+        if: always()
+        run: rm -f bicep/deploy.bicepparam
